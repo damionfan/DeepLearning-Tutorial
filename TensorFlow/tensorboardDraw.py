@@ -43,7 +43,7 @@ sess=tf.Session()
 #.........writer :tf.summary.FileWriter()
 merged=tf.summary.merge_all()
 writer=tf.summary.FileWriter("./",sess.graph)
-sess.run(tf.initialize_all_variables())
+sess.run(tf.global_variables_initializer())
 
 for i in range(1000):
     sess.run(train_step,feed_dict={xs:x_data,ys:y_data})
