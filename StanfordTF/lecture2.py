@@ -9,3 +9,4 @@ with tf.Session() as sess:
     writer=tf.summary.FileWriter('./graphs',sess.graph)
     print(sess.run(x))
 writer.close()#close the writer
+#mac
