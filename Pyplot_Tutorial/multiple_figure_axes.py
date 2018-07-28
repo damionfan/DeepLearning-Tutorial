@@ -5,19 +5,19 @@ import matplotlib.pyplot as plt
 pyplot 有当前figure(图像)和当前axes(轴)的概念。所有的绘图命令都是应用于当前轴。gca()(get_current_axes())获得当前轴 gcf()获得当前figure
 '''
 
-# def f(t):
-#     return np.exp(-t)*np.cos(2*np.pi*t)
+def f(t):
+    return np.exp(-t)*np.cos(2*np.pi*t)
 
-# t1=np.arange(0.,5.,0.1)
-# t2=np.arange(0.,5.,0.02)
+t1=np.arange(0.,5.,0.1)
+t2=np.arange(0.,5.,0.02)
 
-# plt.figure(1)
-# plt.subplot(211)
-# plt.plot(t1,f(t1),'bo',t2,f(t2),"k")
-#
-# plt.subplot(212)
-# plt.plot(t2,np.cos(2*np.pi*t2),'r--')
-# plt.show()
+plt.figure(1)
+plt.subplot(211)
+plt.plot(t1,f(t1),'bo',t2,f(t2),"k")
+
+plt.subplot(212)
+plt.plot(t2,np.cos(2*np.pi*t2),'r--')
+plt.show()
 
 '''
 figure()  可选 ，figure(1) 默认创建 ， 
