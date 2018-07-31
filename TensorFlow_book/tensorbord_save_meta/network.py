@@ -5,7 +5,7 @@ max_steps=1000
 lr=1e-3
 dropout=0.9
 data_dir=''
-log_dir='/log'
+log_dir='./log'
 mnist = input_data.read_data_sets("MNIST_data",one_hot=True)
 
 with tf.name_scope('input'):
@@ -33,14 +33,14 @@ def variable_summaries(var):
         tf.summary.histogram('histogram',var)
 
 
-def nn_layer(input_tensor,input_dim,out_dim,layer_name,act=tf.nn.relu):
+def nn_layer(input_tensor,input_dim,output_dim,layer_name,act=tf.nn.relu):
     with tf.name_scope(layer_name):
         with tf.name_scope('weights'):
             weights=weight_variable([input_dim,output_dim])
         with tf.name_scope('biases'):
             biases=bias_variable([output_dim])
         with tf.name_scope('wx_plus_b'):
-            preactivate = tf.matmul(input_tensor,weights)+bias
+            preactivate = tf.add(tf.matmul(input_tensor,weights),biases)
             tf.summary.histogram('pre_activations',preactivate)
         activations=act(preactivate,name='activation')
         tf.summary.histogram('activations',activations)
@@ -48,7 +48,7 @@ def nn_layer(input_tensor,input_dim,out_dim,layer_name,act=tf.nn.relu):
 hidden1=nn_layer(x,784,500,'layer1')
 
 with tf.name_scope("dropout"):
-    keep_prob=tf.plaeholder(tf.float32)
+    keep_prob=tf.placeholder(tf.float32)
     tf.summary.scalar('dropout_keep_probability',keep_prob)
     dropped=tf.nn.dropout(hidden1,keep_prob)
 
@@ -73,14 +73,14 @@ merged=tf.summary.merge_all()
 
 with tf.Session() as sess:
     train_writer=tf.summary.FileWriter(log_dir+'/train',sess.graph)
-    test_writer = tf.summary.FileWriter(log_dir+'test')
+    test_writer = tf.summary.FileWriter(log_dir+'/test')
     sess.run(tf.global_variables_initializer())
     def feed_dict(train):
         if train:
             xs,ys=mnist.train.next_batch(100)
             k=dropout
         else:
-            xs,ys=mnist.test.image,mnist.test.labels
+            xs,ys=mnist.test.images,mnist.test.labels
             k=1.0
         return {x:xs,y_:ys,keep_prob:k}
     saver=tf.train.Saver()
@@ -88,20 +88,20 @@ with tf.Session() as sess:
         if i%10 ==0:
             summary,acc=sess.run([merged,accuracy],feed_dict=feed_dict(False))
             test_writer.add_summary(summary,i)
-            print('accuracy at step %s :%s '%(i,acc))
+            print('test data accuracy at step %s :%s '%(i,acc))
         else :
             if i %100 ==99:
                 run_options=tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata=tf.RunMetadata()
                 summary,_=sess.run([merged,train_step],feed_dict=feed_dict(True),
                                    options=run_options,run_metadata=run_metadata)
-                train_writer.add_run_metadat(run_metadata,'step%03d'%i)
+                train_writer.add_run_metadata(run_metadata,'step%03d'%i)
                 train_writer.add_summary(summary,i)
-                saver.save(sess,logdir+'/model.ckpt',i)
+                saver.save(sess,log_dir+'/model/model.ckpt',i)
                 print("addinng run metadata for ",i)
             else:
                 summary,_=sess.run([merged,train_step],feed_dict=feed_dict(True))
-                train_writer.add_summay(summary,i)
+                train_writer.add_summary(summary,i)
 
 
 
