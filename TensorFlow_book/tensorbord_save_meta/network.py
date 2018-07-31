@@ -97,7 +97,7 @@ with tf.Session() as sess:
                                    options=run_options,run_metadata=run_metadata)
                 train_writer.add_run_metadata(run_metadata,'step%03d'%i)
                 train_writer.add_summary(summary,i)
-                saver.save(sess,log_dir+'/model/model.ckpt',i)
+                saver.save(sess,log_dir+'/model.ckpt',i)
                 print("addinng run metadata for ",i)
             else:
                 summary,_=sess.run([merged,train_step],feed_dict=feed_dict(True))
