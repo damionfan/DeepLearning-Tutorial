@@ -41,7 +41,8 @@ print(cities.index)#RangeIndex(start=0, stop=3, step=1)
 cities.reindex(np.random.permutation(cities.index))#根据index排序 permutation: 排列
 print(cities)
 '''reindex 会为此类“丢失的”索引添加新行，并在所有对应列中填充 NaN 值：'''
-
+print('-----------------------------------')
 #
 # for key ,value in dict(cities).items():
 #     print('key : %s, value :%s'%(key,value))
+print(california_housing_dataframe[['total_rooms']])

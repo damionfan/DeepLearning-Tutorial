@@ -24,7 +24,7 @@ california_housing_dataframe['median_house_value']/=1000.0
 '''--------------step1:定义特征并配置特征列---------------------------'''
 '''特征列宝石调整额数据类型，进有特征数据的表述，不含数据本身，好像是dtype'''
 #定义input feature ：total_rooms
-my_features= california_housing_dataframe[['total_rooms']]
+my_feature= california_housing_dataframe[['total_rooms']]
 # print(my_features)
 '''numeric_column 定义特征列，这样会将其数据指定为数值'''
 feature_columns=[tf.feature_column.numeric_column('total_rooms')]
@@ -51,7 +51,7 @@ linear_regressor=tf.estimator.LinearRegressor(feature_columns=feature_columns,op
 # buffer_size 参数会指定 shuffle 将从中随机抽样的数据集的大小。
 # 最后，输入函数会为该数据集构建一个迭代器，并向 LinearRegressor 返回下一批数据。
 
-def my_input_fn(features,targets,batch_size=1,shuffle=Ture,num_epoches=None):
+def my_input_fn(features,targets,batch_size=1,shuffle=True,num_epochs=None):
     '''返回一个线性回归的模型
     Args:
         features:pandas DataFrame
@@ -76,3 +76,58 @@ def my_input_fn(features,targets,batch_size=1,shuffle=Ture,num_epoches=None):
     features,labels=ds.make_one_shot_iterator().get_next()
     return features,labels
 '''question：features，targets 都是pandas DataFrame，第一个是dict，第二个是pandas DataFrame那么对features和labels有什么格式要求吗？'''
+
+'''---------------------step5:训练模型------------------------------------------'''
+_=linear_regressor.train(input_fn=lambda:my_input_fn(my_feature,targets),steps=100)
+
+'''----------------------step6:评估模型------------------------------------------'''
+# 训练误差可以衡量您的模型与训练数据的拟合情况，但并不能衡量模型泛化到新数据的效果。
+# 在后面的练习中，您将探索如何拆分数据以评估模型的泛化能力。
+# 创造一个input_fn为了prediction
+# 这是为了做预测，所以不需要shuffle和repeat
+prediction_input_fn=lambda:my_input_fn(my_feature,targets,num_epochs=1,shuffle=False)
+
+predictions=linear_regressor.predict(input_fn=prediction_input_fn)
+#把predictions->numpy array，我们进行误差测量
+'''question:????'''
+predictions=np.array([item['predictions'][0] for item in predictions])
+#输出均方误差 和均方根误差
+mean_squared_error= metrics.mean_squared_error(predictions,targets)
+root_mean_squared_error=math.sqrt(mean_squared_error)
+print('均方误差  ：%0.3f'%mean_squared_error)
+print('均方根误差：%0.3f'%root_mean_squared_error)
+
+min_house_value=california_housing_dataframe['median_house_value'].min()
+max_house_value=california_housing_dataframe['median_house_value'].max()
+min_max_difference=max_house_value-min_house_value
+
+print("min:%0.3f"%min_house_value)
+print("man:%0.3f"%max_house_value)
+print("dif:%0.3f"%min_max_difference)
+
+calibration_data=pd.DataFrame()
+calibration_data['predictions']=pd.Series(predictions)
+calibration_data['targets']=pd.Series(targets)
+print(calibration_data.describe())
+'''---------------plot------------'''
+sample=california_housing_dataframe.sample(n=300)#取样可视化
+x_0=sample['total_rooms'].min()
+x_1=sample['total_rooms'].max()
+#取回最后的weights和bias
+weight=linear_regressor.get_variable_value('linear/linear_model/total_rooms/weights')[0]
+bias=linear_regressor.get_variable_value('linear/linear_model/bias_weights')
+
+y_0=weight*x_0+bias
+y_1=weight*x_1+bias
+#plot
+plt.plot([x_0,x_1],[y_0,y_1],c='r')
+#labels
+plt.ylabel('median_house_value')
+plt.xlabel('total_rooms')
+
+#plot sample
+plt.scatter(sample['total_rooms'],sample['median_house_value'])
+
+#display
+plt.show()
+
