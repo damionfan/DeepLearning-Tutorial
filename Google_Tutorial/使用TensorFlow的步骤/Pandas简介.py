@@ -42,7 +42,32 @@ cities.reindex(np.random.permutation(cities.index))#根据index排序 permutatio
 print(cities)
 '''reindex 会为此类“丢失的”索引添加新行，并在所有对应列中填充 NaN 值：'''
 print('-----------------------------------')
-#
+# #
 # for key ,value in dict(cities).items():
-#     print('key : %s, value :%s'%(key,value))
-print(california_housing_dataframe[['total_rooms']])
+#    print('key : %s, value :%s'%(key,value))
+# key : Is wide and has saint name,
+#value :0    False
+# 1    False
+# 2    False
+# Name: Is wide and has saint name, dtype: bool
+# key : population,
+# value :0     8524
+# 1    10102
+# 2    23509
+# Name: population, dtype: int64
+# key : Population density,
+# value :0    181.864732
+# 1     57.225401
+# 2    240.083742
+# Name: Population density, dtype: float64
+# key : Area square miles,
+# value :0     46.87
+# 1    176.53
+# 2     97.92
+# Name: Area square miles, dtype: float64
+# key : city name,
+# value :0    sanFracisco
+# 1       san jose
+# 2     sacramento
+# Name: city name, dtype: object
+# print(california_housing_dataframe[['total_rooms']])
