@@ -1,6 +1,6 @@
 from __future__ import print_function
 import math
-from IPython import display
+# from IPython import display
 from matplotlib import cm
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
@@ -19,14 +19,14 @@ california_housing_dataframe=california_housing_dataframe.reindex(np.random.perm
 california_housing_dataframe['median_house_value']/=1000.0
 
 def my_input_fn(features,targets,batch_size=1,shuffle=True,num_epochs=None):
-    features={key:np.array(value) for key,value in dict(feature).items()}
+    features={key:np.array(value) for key,value in dict(features).items()}
 
     ds=Dataset.from_tensor_slices((features,targets))
     ds=ds.batch(batch_size).repeat(num_epochs)
 
     if shuffle:
         ds=ds.shuffle(buffer_size=10000)
-    features,labels=ds.make_one_sht_iterator().get_next()
+    features,labels=ds.make_one_shot_iterator().get_next()
     return features,labels
 
 def train_model(learning_rate,steps,batch_size,input_feature):
@@ -52,14 +52,17 @@ def train_model(learning_rate,steps,batch_size,input_feature):
     linear_regressor=tf.estimator.LinearRegressor(feature_columns=feature_columns,optimizer=my_optimizer)
 
     #plot
+    print('plot data sample')
     plt.figure(figsize=(15,6))
-    plt.subplt(1,2,1)
+    plt.subplot(1,2,1)
     plt.title('learn line by period')
     plt.ylabel(my_label)
     plt.xlabel(my_feature)
     sample=california_housing_dataframe.sample(n=300)
-    plt.scatter(sample[my_feature],sample(my_label))
+    plt.scatter(sample[my_feature],sample[my_label])
     colors=[cm.coolwarm(x) for x in np.linspace(-1,1,periods)]
+    # plt.draw()
+
 
     #train
     print('train')
@@ -73,20 +76,20 @@ def train_model(learning_rate,steps,batch_size,input_feature):
         predictions=np.array([item['predictions'][0] for item in predictions])
 
         #loss
-        root_mean_squared_error=math.sqart(metrics.mean_squared_error(predictions,targets))
+        root_mean_squared_error=math.sqrt(metrics.mean_squared_error(predictions,targets))
         print('period: %02d:%0.2f'%(period,root_mean_squared_error))
         root_mean_squared_errors.append(root_mean_squared_error)
 
         #plot prediction
         y_extents=np.array([0,sample[my_label].max()])
 
-        weight=linear_regressor.get_variable_value('linear/linear_model/%s/weights'%input_feaure)[0]
+        weight=linear_regressor.get_variable_value('linear/linear_model/%s/weights'%input_feature)[0]
         bias=linear_regressor.get_variable_value(('linear/linear_model/bias_weights'))
-
-        x_extents=(y_extents-bias)/weights
-        x_extents=np.maximum(np.minimum(x_extents,sample[my_feature].max()),sample[my_feature.min()])
+        #predict line
+        x_extents=(y_extents-bias)/weight
+        x_extents=np.maximum(np.minimum(x_extents,sample[my_feature].max()),sample[my_feature].min())
         y_extents=weight*x_extents+bias
-        plt.plot(x_extents,y_extents,color=colors[periods])
+        plt.plot(x_extents,y_extents,color=colors[period])
     print('training finished')
         #plot
     plt.subplot(1,2,2)
@@ -100,9 +103,19 @@ def train_model(learning_rate,steps,batch_size,input_feature):
     calibration_data=pd.DataFrame()
     calibration_data['predictions']=pd.Series(predictions)
     calibration_data['targets']=pd.Series(targets)
-    display.diaplay(calibration_data.describe())
+    # display.diaplay(calibration_data.describe())
+    print(calibration_data.describe())
 
     print('final RMSE %0.2f'%root_mean_squared_error)
 
     return calibration_data
+
+#合成特征 total_rooms 与population的比例作为train_model()的input_feature
+california_housing_dataframe['rooms_per_person']=(california_housing_dataframe['total_rooms']/california_housing_dataframe['population'])
+# plt.ion()
+calibration_data=train_model(learning_rate=5e-5,
+                             steps=500,
+                             batch_size=5,
+                             input_feature='rooms_per_person')
+# plt.show()
 
