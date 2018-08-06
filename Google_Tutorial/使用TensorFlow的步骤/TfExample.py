@@ -40,6 +40,18 @@ my_optimizer=tf.train.GradientDescentOptimizer(learning_rate=1e-7)
 #在使用梯度之前切分梯度（optimizer,clip_norm) 裁剪，确保数值稳定性以及防止梯度爆炸。
 
 my_optimizer=tf.contrib.estimator.clip_gradients_by_norm(my_optimizer,5.0)
+'''To perform the clipping, the values `t_list[i]` are set to:
+
+      t_list[i] * clip_norm / max(global_norm, clip_norm)
+
+  where:
+
+      global_norm = sqrt(sum([l2norm(t)**2 for t in t_list]))
+
+  If `clip_norm > global_norm` then the entries in `t_list` remain as they are,
+  otherwise they're all shrunk by the global ratio.
+
+  Any of the entries of `t_list` that are of type `None` are ignored.'''
 
 #配置
 linear_regressor=tf.estimator.LinearRegressor(feature_columns=feature_columns,optimizer=my_optimizer)
