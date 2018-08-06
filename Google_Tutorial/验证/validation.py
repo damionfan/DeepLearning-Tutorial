@@ -132,10 +132,10 @@ def train_model(learning_rate,steps,batch_size,training_examples,training_target
     plt.ylabel('RMSE')
     plt.xlabel('periods')
     plt.title('RMSE periods figure3')
-    plt.tight_layout()
+    plt.tight_layout()#自动调整子图参数
     plt.plot(training_rmse,label='training_rmse')
     plt.plot(validation_rmse,label='validation_rmse')
-    plt.legend()
+    plt.legend()#图例
     plt.show()
     return linear_regressor
 
