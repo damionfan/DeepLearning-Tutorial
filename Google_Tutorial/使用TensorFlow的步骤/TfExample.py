@@ -11,7 +11,7 @@ from tensorflow.python.data import Dataset
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 pd.options.display.max_rows=10
-pd.options.display.float_format='{:.1f}'.format
+pd.options.display.float_format='{:.1f}'.format#接收浮点返回指定格式
 
 california_housing_dataframe=pd.read_csv('california_housing_train.csv',sep=',')
 '''1.随机化处理2.把median_house_value调整为以千为单位'''
@@ -27,7 +27,7 @@ california_housing_dataframe['median_house_value']/=1000.0
 my_feature= california_housing_dataframe[['total_rooms']]
 # print(my_features)
 '''numeric_column 定义特征列，这样会将其数据指定为数值'''
-feature_columns=[tf.feature_column.numeric_column('total_rooms')]
+feature_columns=[tf.feature_column.numeric_column('total_rooms')]#key:标识输入要素的唯一字符串
 
 '''--------------step2:定义目标------------------------------------------'''
 #define label
@@ -37,6 +37,8 @@ targets=california_housing_dataframe['median_house_value']
 #通过 clip_gradients_by_norm 将梯度裁剪应用到我们的优化器。梯度裁剪可确保梯度大小在训练期间不会变得过大，梯度过大会导致梯度下降法失败。
 #GD
 my_optimizer=tf.train.GradientDescentOptimizer(learning_rate=1e-7)
+#在使用梯度之前切分梯度（optimizer,clip_norm) 裁剪，确保数值稳定性以及防止梯度爆炸。
+
 my_optimizer=tf.contrib.estimator.clip_gradients_by_norm(my_optimizer,5.0)
 
 #配置
@@ -65,7 +67,8 @@ def my_input_fn(features,targets,batch_size=1,shuffle=True,num_epochs=None):
     #pandas data -> numpy array
     features={key:np.array(value) for key,value in dict(features).items()}#每一列 列名：数据 value是列表！
     #构造数据集dataset，配置batching/repeating
-    ds=Dataset.from_tensor_slices((features,targets))#warning:2G limit
+    #dataset使用的话用iterator
+    ds=Dataset.from_tensor_slices((features,targets))#warning:2G limit 如果有numpy则作为constant
     ds=ds.batch(batch_size).repeat(num_epochs)
 
     #shuffle
@@ -73,9 +76,11 @@ def my_input_fn(features,targets,batch_size=1,shuffle=True,num_epochs=None):
         ds=ds.shuffle(buffer_size=10000)
 
     #返回下一个batch
+    #terator = dataset.make_one_shot_iterator()从dataset中实例化了一个Iterator，这个Iterator是一个“one shot iterator”，即只能从头到尾读取一次
     features,labels=ds.make_one_shot_iterator().get_next()
     return features,labels
-'''question：features，targets 都是pandas DataFrame，第一个是dict，第二个是pandas DataFrame那么对features和labels有什么格式要求吗？'''
+'''question：features，targets 都是pandas DataFrame，第一个是dict，第二个是pandas DataFrame那么对features和labels有什么格式要求吗？
+    第一个其实把DataFrame改成了一个dict,targets也是一个dict,从理解上说的话'''
 
 '''---------------------step5:训练模型------------------------------------------'''
 _=linear_regressor.train(input_fn=lambda:my_input_fn(my_feature,targets),steps=100)
@@ -87,10 +92,17 @@ _=linear_regressor.train(input_fn=lambda:my_input_fn(my_feature,targets),steps=1
 # 这是为了做预测，所以不需要shuffle和repeat
 prediction_input_fn=lambda:my_input_fn(my_feature,targets,num_epochs=1,shuffle=False)
 
+#返回一个Estimator.predict 对象 是含有预测值的tensor
 predictions=linear_regressor.predict(input_fn=prediction_input_fn)
+
+# print('---------------------')
+# print(predictions) <generator object Estimator.predict at 0x00000133BBABD7D8>
 #把predictions->numpy array，我们进行误差测量
 '''question:????'''
 predictions=np.array([item['predictions'][0] for item in predictions])
+print('--------------------')
+print(predictions)
+print('----------------------')
 #输出均方误差 和均方根误差
 mean_squared_error= metrics.mean_squared_error(predictions,targets)
 root_mean_squared_error=math.sqrt(mean_squared_error)
