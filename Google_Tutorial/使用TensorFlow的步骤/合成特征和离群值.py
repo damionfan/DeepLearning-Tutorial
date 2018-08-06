@@ -89,7 +89,9 @@ def train_model(learning_rate,steps,batch_size,input_feature):
         x_extents=(y_extents-bias)/weight
         x_extents=np.maximum(np.minimum(x_extents,sample[my_feature].max()),sample[my_feature].min())
         y_extents=weight*x_extents+bias
+
         plt.plot(x_extents,y_extents,color=colors[period])
+
     print('training finished')
         #plot
     plt.subplot(1,2,2)
@@ -112,10 +114,13 @@ def train_model(learning_rate,steps,batch_size,input_feature):
 
 #合成特征 total_rooms 与population的比例作为train_model()的input_feature
 california_housing_dataframe['rooms_per_person']=(california_housing_dataframe['total_rooms']/california_housing_dataframe['population'])
-# plt.ion()
+
 calibration_data=train_model(learning_rate=5e-5,
                              steps=500,
                              batch_size=5,
                              input_feature='rooms_per_person')
-# plt.show()
+plt.figure(figsize=(15,6))
+plt.subplot(1,2,1)
+plt.scatter(calibration_data['predictions'],calibration_data['targets'])
+plt.show()
 
