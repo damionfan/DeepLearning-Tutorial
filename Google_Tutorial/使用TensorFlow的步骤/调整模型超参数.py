@@ -55,12 +55,15 @@ def train_model(learning_rate,steps,batch_size,input_feature='total_rooms'):
     steps_per_periods=steps/periods
 
     my_feature=input_feature
-    my_feature_data=california_housing_dataframe[[my_feature]]#两个[[]]有个列名。。。
+    my_feature_data=california_housing_dataframe[[my_feature]]#两个[[]]有个列名：最后transform成为dict
     my_label='median_house_value'
     targets=california_housing_dataframe[my_label]
 
     #特征列
     feature_columns=[tf.feature_column.numeric_column(my_feature)]
+    '''
+    tf.feature_column.numeric_column(key,shape=(1,),default_value=None,dtype=tf.float32,normalizer_fn=None
+    args:key:用于列名，或者是dict的key for 特征tensor  or 特征column   '''
 
     #input 函数
     training_input_fn=lambda:my_input_fn(my_feature_data,targets,batch_size=batch_size)
@@ -79,7 +82,7 @@ def train_model(learning_rate,steps,batch_size,input_feature='total_rooms'):
     plt.xlabel(my_feature)
     sample=california_housing_dataframe.sample(n=300)
     plt.scatter(sample[my_feature],sample[my_label])
-    colors=[cm.coolwarm(x) for x in np.linspace(-1,1,periods)]
+    colors=[cm.coolwarm(x) for x in np.linspace(-1,1,periods)]#色图取样 coolwarm我没找着
 
     #训练model 定期评估
     print('训练model')
@@ -100,12 +103,12 @@ def train_model(learning_rate,steps,batch_size,input_feature='total_rooms'):
 
         #找到weights,biases
         y_extents=np.array([0,sample[my_label].max()])
-
+        #emmmm 名字就是意思 通过name获得value
         weight=linear_regressor.get_variable_value('linear/linear_model/%s/weights'%input_feature)[0]
         bias=linear_regressor.get_variable_value('linear/linear_model/bias_weights')
 
         x_extents=(y_extents-bias)/weight
-        x_extents=np.maximum(np.minimum(x_extents,sample[my_feature].max()),sample[my_feature].min())#!!!!
+        x_extents=np.maximum(np.minimum(x_extents,sample[my_feature].max()),sample[my_feature].min())
         y_extents=weight*x_extents+bias
 
         plt.plot(x_extents,y_extents,color=colors[period])

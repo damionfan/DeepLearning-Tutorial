@@ -81,10 +81,13 @@ def my_input_fn(features,targets,batch_size=1,shuffle=True,num_epochs=None):
     #构造数据集dataset，配置batching/repeating
     #dataset使用的话用iterator
     ds=Dataset.from_tensor_slices((features,targets))#warning:2G limit 如果有numpy则作为constant
+    '''from_tensor 返回一个元素的dataset,from_tensor_slices 返回从第一维切片的dataset'''
     ds=ds.batch(batch_size).repeat(num_epochs)
 
     #shuffle
     if shuffle:
+        #buffer_size是新的dataset每次采样都是从buffer这的，可以理解为打乱的size
+        #representing the number of elements from this dataset from which the new dataset will sample.
         ds=ds.shuffle(buffer_size=10000)
 
     #返回下一个batch
@@ -110,7 +113,7 @@ predictions=linear_regressor.predict(input_fn=prediction_input_fn)
 # print('---------------------')
 # print(predictions) <generator object Estimator.predict at 0x00000133BBABD7D8>
 #把predictions->numpy array，我们进行误差测量
-'''question:????'''
+'''predictions是以列表为元素的列表对象'''
 predictions=np.array([item['predictions'][0] for item in predictions])
 print('--------------------')
 print(predictions)

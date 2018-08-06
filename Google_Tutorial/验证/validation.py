@@ -133,8 +133,8 @@ def train_model(learning_rate,steps,batch_size,training_examples,training_target
     plt.xlabel('periods')
     plt.title('RMSE periods figure3')
     plt.tight_layout()
-    plt.plot(training_rmse,label='training')
-    plt.plot(validation_rmse,label='validation')
+    plt.plot(training_rmse,label='training_rmse')
+    plt.plot(validation_rmse,label='validation_rmse')
     plt.legend()
     plt.show()
     return linear_regressor
