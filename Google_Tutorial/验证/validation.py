@@ -67,11 +67,87 @@ ax.set_autoscalex_on(False)
 ax.set_xlim([-126,-112])
 plt.scatter(training_examples['longitude'],training_examples['latitude'],
             cmap='coolwarm',c=training_targets['median_house_value']/training_targets['median_house_value'].max())
-_=plt.plot()
-plt.show()
+plt.plot()
 
-def my_input_fn(featues,targets,batch_size=1,shuffle=True,num_epochs=None):
+def my_input_fn(features,targets,batch_size=1,shuffle=True,num_epochs=None):
+    #pd.DataFrame->dict(np.array)
     features={key:np.array(value) for key,value in dict(features).items()}
+    #dataset
+    ds=Dataset.from_tensor_slices((features,targets))
+    ds=ds.batch(batch_size).repeat(num_epochs)
+
+    #shuffle
+    if shuffle:
+        ds=ds.shuffle(10000)
+
+    #Return next batch
+    features,labels=ds.make_one_shot_iterator().get_next()
+    return features,labels
+
+#特征列
+def construct_feature_column(input_features):
+    return set([tf.feature_column.numeric_column(my_feature) for my_feature in input_features])#set 无序不重复
+
+def train_model(learning_rate,steps,batch_size,training_examples,training_targets,validation_examples,validation_targets):
+    periods=2
+    steps_per_period=steps/periods
+
+    #optimizer
+    my_optimizer=tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
+    my_optimizer=tf.contrib.estimator.clip_gradients_by_norm(my_optimizer,5.0)
+
+    linear_regressor=tf.estimator.LinearRegressor(feature_columns=construct_feature_column(training_examples),optimizer=my_optimizer)
+
+    #input func
+    training_input_fn=lambda:my_input_fn(training_examples,training_targets['median_house_value'],batch_size=batch_size)
+    predict_training_input_fn=lambda:my_input_fn(training_examples,training_targets['median_house_value'],shuffle=False,num_epochs=1)#就是用训练数据predict
+    predict_validation_input_fn=lambda:my_input_fn(validation_examples,validation_targets['median_house_value'],shuffle=False,num_epochs=1)#??
+
+    #Train
+    print('train')
+    training_rmse=[]
+    validation_rmse=[]
+    for period in range(0,periods):
+        #train
+        linear_regressor.train(input_fn=training_input_fn,steps=steps_per_period)
+        #predict
+        training_predictions=linear_regressor.predict(predict_training_input_fn)
+        training_predictions=np.array([item['predictions'][0] for item in training_predictions])
+
+        validation_predictions=linear_regressor.predict(input_fn=predict_validation_input_fn)
+        validation_predictions=np.array([item['predictions'][0] for item in validation_predictions])
+        #loss
+        training_root_mean_squared_error=math.sqrt(metrics.mean_squared_error(training_predictions,training_targets))
+        validation_root_mean_squared_error=math.sqrt(metrics.mean_squared_error(validation_predictions,validation_targets))
+
+        print("  period %02d : %0.2f" % (period, training_root_mean_squared_error))
+
+        training_rmse.append(training_root_mean_squared_error)
+        validation_rmse.append(validation_root_mean_squared_error)
+
+    print('train done')
+
+    #plot
+    plt.figure(2)
+    plt.ylabel('RMSE')
+    plt.xlabel('periods')
+    plt.title('RMSE periods figure3')
+    plt.tight_layout()
+    plt.plot(training_rmse,label='training')
+    plt.plot(validation_rmse,label='validation')
+    plt.legend()
+    plt.show()
+    return linear_regressor
+
+linear_regressor=train_model(
+    learning_rate=3e-5,
+    steps=50,
+    batch_size=5,
+    training_examples=training_examples,
+    training_targets=training_targets,
+    validation_examples=validation_examples,
+    validation_targets=validation_targets
+)
 
 
 
