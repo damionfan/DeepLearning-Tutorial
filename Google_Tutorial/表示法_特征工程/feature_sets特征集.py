@@ -9,7 +9,7 @@ from sklearn import metrics
 import tensorflow as tf
 from tensorflow.python.data import Dataset
 
-from Google_Tutorial.使用TensorFlow的步骤.TfExample import my_feature
+
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 pd.options.display.max_rows=10
@@ -77,9 +77,10 @@ def construct_feature_columns(input_features):
                 for my_feature in input_features])
 
 def my_input_fn(features,targets,batch_size=1,shuffle=False,num_epochs=None):
+    #targets:pd.Series
     features={key:np.array(value) for key,value in dict(features).items()}
-    ds=Dataset.from_tensor_slices((features,targets))
-    ds=df.batch(batch_size).repeat(num_epochs)
+    ds=Dataset.from_tensor_slices((features,targets))#这两个都是dict
+    ds=ds.batch(batch_size).repeat(num_epochs)
     if shuffle:
         ds=ds.shuffle(10000)
     features,labels=ds.make_one_shot_iterator().get_next()
@@ -92,8 +93,76 @@ def train_model(learning_rate,steps,batch_size,training_examples,training_target
 
     my_optimizer=tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
     my_optimizer=tf.contrib.estimator.clip_gradients_by_norm(my_optimizer,5.0)
-    liear_regressor=tf.estimator.LinearRegressor(feature_columns=construct_feature_columns(training_examples),
+    linear_regressor=tf.estimator.LinearRegressor(feature_columns=construct_feature_columns(training_examples),
                                                  optimizer=my_optimizer)
     #这里构造的特征列的参数key：是DataFrame!!!
 
+    #input fn
+    training_input_fn=lambda:my_input_fn(training_examples,training_targets['median_house_value'],batch_size,)#targets这里是一个pd.Series
+    predict_training_input_fn=lambda:my_input_fn(training_examples,training_targets['median_house_value'],num_epochs=1,shuffle=False)
+    predict_validation_input_fn=lambda:my_input_fn(validation_examples,validation_targets['median_house_value'],num_epochs=1,shuffle=False)
 
+    print('train and record rmse')
+    training_rmse=[]
+    validation_rmse=[]
+    for period in range(0,periods):
+        #train
+        linear_regressor.train(input_fn=training_input_fn,steps=steps_per_period)
+        #validation and predict
+        training_predictions=linear_regressor.predict(input_fn=predict_training_input_fn)
+        training_predictions=np.array([item['predictions'][0] for item in  training_predictions])#这里还是不太懂 这里好像是默认就是'predictions'
+
+        validation_predictions=linear_regressor.predict(input_fn=predict_validation_input_fn)
+        validation_predictions=np.array([item['predictions'][0] for item in validation_predictions])
+
+        #loss
+        training_root_mean_squared_error=math.sqrt(metrics.mean_squared_error(training_predictions,training_targets['median_house_value']))
+        validation_root_mean_squared_error=math.sqrt(metrics.mean_squared_error(validation_predictions,validation_targets['median_house_value']))
+
+        training_rmse.append(training_root_mean_squared_error)
+        validation_rmse.append(validation_root_mean_squared_error)
+    print('train done')
+
+    #plot
+    plt.figure(1)
+    plt.ylabel('RMSE')
+    plt.xlabel('Reriods')
+    plt.title('RMSE VS PERIODS figure1')
+    plt.tight_layout()
+    plt.plot(training_rmse,label='training_rmse')
+    plt.plot(validation_rmse,label='validation_rmse')
+    plt.legend()
+    # plt.show()
+    return linear_regressor
+
+minimal_features=['median_income','latitude']
+minimal_training_examples=training_examples[minimal_features]
+minimal_validation_examples=validation_examples[minimal_features]
+
+# train_model(learning_rate=1e-2,steps=500,batch_size=5,
+#             training_examples=minimal_training_examples,
+#             training_targets=training_targets,
+#             validation_examples=minimal_validation_examples,
+#             validation_targets=validation_targets)
+
+plt.scatter(training_examples['latitude'],training_targets['median_house_value'])
+# 对纬度进行分桶。在 Pandas 中使用 Series.apply 执行此操作相当简单
+LATITUDE_RANGES=zip(range(32,44),range(33,45))
+def select_and_transform_features(source_df):
+    select_examples=pd.DataFrame()
+    select_examples['median_income']=source_df['median_income']
+    for r in LATITUDE_RANGES:
+        select_examples['latitude_%d_to_%d'%r]=source_df['latitude'].apply(
+            lambda l:1.0 if l>=r[0] and l<r[1] else 0.0
+        )#lambda x: v1 if True else v2
+    return select_examples
+selected_training_examples = select_and_transform_features(training_examples)
+selected_validation_examples = select_and_transform_features(validation_examples)
+train_model(
+    learning_rate=0.01,
+    steps=500,
+    batch_size=5,
+    training_examples=selected_training_examples,
+    training_targets=training_targets,
+    validation_examples=selected_validation_examples,
+    validation_targets=validation_targets)
