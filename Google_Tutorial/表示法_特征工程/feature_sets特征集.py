@@ -115,7 +115,7 @@ def train_model(learning_rate,steps,batch_size,training_examples,training_target
         validation_predictions=linear_regressor.predict(input_fn=predict_validation_input_fn)
         validation_predictions=np.array([item['predictions'][0] for item in validation_predictions])
 
-        #loss
+        #loss    这里有没有列名都行
         training_root_mean_squared_error=math.sqrt(metrics.mean_squared_error(training_predictions,training_targets['median_house_value']))
         validation_root_mean_squared_error=math.sqrt(metrics.mean_squared_error(validation_predictions,validation_targets['median_house_value']))
 
@@ -146,7 +146,7 @@ minimal_validation_examples=validation_examples[minimal_features]
 #             validation_targets=validation_targets)
 
 plt.scatter(training_examples['latitude'],training_targets['median_house_value'])
-# 对纬度进行分桶。在 Pandas 中使用 Series.apply 执行此操作相当简单
+# 对纬度进行分箱。在 Pandas 中使用 Series.apply  ->Boolean类型
 LATITUDE_RANGES=zip(range(32,44),range(33,45))
 def select_and_transform_features(source_df):
     select_examples=pd.DataFrame()
