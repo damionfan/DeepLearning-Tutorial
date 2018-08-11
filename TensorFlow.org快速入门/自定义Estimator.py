@@ -54,7 +54,7 @@ def my_model_fn(features,labels,mode,#mode:tf.estimator.ModeKeys 的实例
     '''模型函数必须提供代码来处理全部三个 mode 值。对于每个 mode 值，
     您的代码都必须返回 tf.estimator.EstimatorSpec 的一个实例，其中包含调用程序需要的信息。我们来详细了解各个 mode。'''
     # 预测
-    predicted_classes = tf.argmax(logits, 1)
+    predicted_classes = tf.argmax(logits, 1)#这里我猜想是一个样本一个数据，多个合成predictions
     if mode == tf.estimator.ModeKeys.PREDICT:
         predictions = {
             'class_ids': predicted_classes[:, tf.newaxis],
