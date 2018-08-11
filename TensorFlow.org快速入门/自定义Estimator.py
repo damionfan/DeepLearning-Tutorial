@@ -43,14 +43,29 @@ def my_model_fn(features,labels,mode,#mode:tf.estimator.ModeKeys 的实例
         net=tf.layers.dense(net,units=units,activation=tf.nn.relu)
     #输出层
     logits=tf.layers.dense(net,params['n_classes'],activation=None)#for tf.nn.softmax
-'''
-train()->	ModeKeys.TRAIN
-evaluate()->	ModeKeys.EVAL
-predict()->	ModeKeys.PREDICT'''
-# classifier = tf.estimator.Estimator(...)
-# classifier.train(input_fn=lambda: my_input_fn(FILE_TRAIN, True, 500))
-'''模型函数必须提供代码来处理全部三个 mode 值。对于每个 mode 值，
-您的代码都必须返回 tf.estimator.EstimatorSpec 的一个实例，其中包含调用程序需要的信息。我们来详细了解各个 mode。'''
+
+
+    '''
+    train()->	ModeKeys.TRAIN
+    evaluate()->	ModeKeys.EVAL
+    predict()->	ModeKeys.PREDICT'''
+    # classifier = tf.estimator.Estimator(...)
+    # classifier.train(input_fn=lambda: my_input_fn(FILE_TRAIN, True, 500))
+    '''模型函数必须提供代码来处理全部三个 mode 值。对于每个 mode 值，
+    您的代码都必须返回 tf.estimator.EstimatorSpec 的一个实例，其中包含调用程序需要的信息。我们来详细了解各个 mode。'''
+    # 预测
+    predicted_classes = tf.argmax(logits, 1)
+    if mode == tf.estimator.ModeKeys.PREDICT:
+        predictions = {
+            'class_ids': predicted_classes[:, tf.newaxis],
+            'probabilities': tf.nn.softmax(logits),
+            'logits': logits,
+        }
+        return tf.estimator.EstimatorSpec(mode, predictions=predictions)
+
+
+
+
 
 
 
