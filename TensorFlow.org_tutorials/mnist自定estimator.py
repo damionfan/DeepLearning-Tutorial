@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+from tensorflow.models.tutorials.image.mnist.convolutional import NUM_EPOCHS
 
 tf.logging.set_verbosity(tf.logging.INFO)
 '''设置阈值
@@ -11,8 +12,8 @@ TensorFlow使用五个不同级别的日志消息。
  # 默认情况下，TENSFlow在WARN的日志记录级别进行配置，但是在跟踪模型训练时，您需要将级别调整为INFO，这将提供适合操作正在进行的其他反馈。'''
 
 
-if __name__=='__main__':
-    tf.app.run()
+# if __name__=='__main__':
+#     tf.app.run()
 
 def cnn_model_fn(feaures,labels,mode):
     input_layer=tf.reshape(features['x'],[-1,28,28,1])
@@ -28,6 +29,7 @@ def cnn_model_fn(feaures,labels,mode):
     dropout=tf.layers.dropout(inputs=dense,rate=0.4,training= (mode==tf.estimator.ModeKeys.TRAIN))
 
     logits=tf.layers.dense(inputs=dropout,units=10)
+    #logits, has shape [batch_size, 10].
 
     predictions={
         'classes':tf.argmax(logits,1),
@@ -48,3 +50,41 @@ def cnn_model_fn(feaures,labels,mode):
         'accuracy':tf.metrics.accuracy(labels,predictions['classes'])
     }
     return tf.estimator.EstimatorSpec(mode=mode,loss=loss,eval_metric_ops=eval_metric_ops)
+
+
+mnist=tf.contrib.learn.datasets.load_dataset('mnist')
+train_data=mnist.train.images
+train_labels=np.asarray(mnist.train.labels,dtype=np.int32)
+eval_data=mnist.test.images
+eval_labels=np.asarray(mnist.test.labels,dtype=np.int32)
+
+mnist_classifier=tf.esitmator.Estimator(cnn_model_fn,model_dir='/model/mnist_conv_model')
+#logging hook
+tensors_to_log={'probabilities':'softmax'}#store a dict of the tensors,key:要显示的在log输出，下一个是tensor的名字。
+logging_hook=tf.train.LoggingTensorHook(
+    tensors=tensors_to_log,every_n_iter=50)#50步记录
+#train model
+train_input_fn=tf.estimator.inputs.num_input_fn(
+    x={'x':train_data},#as a dict
+    y=train_labels,
+    batch_size=100,
+    shuffle=True,
+)
+mnist_classifier.train(
+    input_fn=train_input_fn,
+    steps=20000,
+    hooks=[logging_hook]
+)#We pass our logging_hook to the hooks argument, so that it will be triggered during training.
+
+#eval
+eval_input_fn=tf.estimator.inputs.num_input_fn(
+    x={'x':eval_data},
+    y=eval_labels,
+    num_epochs=1,
+    shuffle=False
+)
+eval_results=mnist_classifier.evaluate(input_fn=eval_input_fn)
+print(eval_results)
+
+
+
