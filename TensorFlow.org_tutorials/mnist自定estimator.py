@@ -67,6 +67,7 @@ logging_hook=tf.train.LoggingTensorHook(
 train_input_fn=tf.estimator.inputs.num_input_fn(
     x={'x':train_data},#as a dict
     y=train_labels,
+
     batch_size=100,
     shuffle=True,
 )

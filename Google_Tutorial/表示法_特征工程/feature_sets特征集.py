@@ -78,6 +78,10 @@ def construct_feature_columns(input_features):
 
 def my_input_fn(features,targets,batch_size=1,shuffle=False,num_epochs=None):
     #targets:pd.Series
+    # print(';;;;;;;;;;;;;;;;;;;;;;;;;;;;;')
+    # print(features.head(2))
+    # print(dict(features.head(2)))
+
     features={key:np.array(value) for key,value in dict(features).items()}
     ds=Dataset.from_tensor_slices((features,targets))#这两个都是dict
     ds=ds.batch(batch_size).repeat(num_epochs)
