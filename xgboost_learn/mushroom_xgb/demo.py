@@ -76,6 +76,8 @@ print('test acc :%.2f %%'%(test_accuracy*100))
  2 : 树的索引，从0开始
  3 : 显示反向，默认竖直 "LR"是水平方向
 '''
+import os
+os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
 import matplotlib.pyplot as plt
 import graphviz
 xgb.plot_tree(bst,num_trees=0,rankdir='LR')
