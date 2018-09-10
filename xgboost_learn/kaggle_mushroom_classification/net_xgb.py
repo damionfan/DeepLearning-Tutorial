@@ -1,4 +1,5 @@
 # coding=utf-8
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,6 +7,7 @@ import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
+''' 待定，因为一般（官网）都是用的train'''
 #标准化标签 ->range()
 from sklearn.preprocessing import LabelEncoder
 

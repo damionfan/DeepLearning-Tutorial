@@ -100,7 +100,7 @@ with tf.Session() as sess:
         sess.run(train,feed_dict={data_image:batch[0],data_label:batch[1]})
         duration=time.time()-start_time
         if epoch%10 ==0:
-            print('examples/s'%(duration/batch_size),end='')
+            print('Sequential_examples_demo/s'%(duration/batch_size),end='')
             print('second/batch'%float(duration))
             res=sess.run(merged,feed_dict={data_image:batch[0],data_label:batch[1]})
             writer.add_summary(res,epoch)
