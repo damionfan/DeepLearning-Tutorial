@@ -22,7 +22,7 @@ b_conv1=bias_variable([32])
 
 x_image=tf.reshape(x,[-1,28,28,1])
 
-h_conv1
+
 
 #占位符
 x =tf.placeholder('float32',shape=[None,784])

@@ -3,7 +3,7 @@ import numpy as np
 from tensorflow.models.tutorials.image.mnist.convolutional import NUM_EPOCHS
 
 tf.logging.set_verbosity(tf.logging.INFO)
-'''设置阈值
+'''设置阈值 >=INFO
 在tensorflow中有函数可以直接log打印，这个跟ROS系统中打印函数差不多。
 TensorFlow使用五个不同级别的日志消息。 
 按照上升的顺序，它们是DEBUG，INFO，WARN，ERROR和FATAL。 
