@@ -44,7 +44,8 @@ param={
     'max_depth':2,
     'eta':1,
     'silent':0,
-    'objective':'binary:logistic'
+    'objective':'binary:logistic',
+
 }
 
 #设置boosting 迭代次数
@@ -79,6 +80,6 @@ print('test acc :%.2f %%'%(test_accuracy*100))
 import os
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
 import matplotlib.pyplot as plt
-import graphviz
-xgb.plot_tree(bst,num_trees=0,rankdir='LR')
-plt.show()
+# import graphviz #这个需要先安装一个msi在windows上 其他的暂时没用到
+# xgb.plot_tree(bst,num_trees=0,rankdir='LR')
+# plt.show()
