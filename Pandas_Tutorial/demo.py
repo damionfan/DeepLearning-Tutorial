@@ -17,6 +17,12 @@ import numpy as np
 # # 2018-01-04 -1.511099  1.043059  1.282157  0.698524
 # '''names=[0,1,2,3,4]的话就可以把索引变成一列数据'''
 
-pf=pd.read_csv('data/foo.csv',header=0)
-pf=pf.as_matrix()
-print(pf)
+# pf=pd.read_csv('data/foo.csv',header=0)
+# pf=pf.as_matrix()
+# print(pf)
+df=pd.DataFrame({
+    'col1':[1,2,3],
+    'col2':['a','b','c']
+})
+print(df)
+# print(df[0])#error
