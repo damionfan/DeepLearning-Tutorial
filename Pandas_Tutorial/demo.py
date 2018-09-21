@@ -20,9 +20,11 @@ import numpy as np
 # pf=pd.read_csv('data/foo.csv',header=0)
 # pf=pf.as_matrix()
 # print(pf)
-df=pd.DataFrame({
-    'col1':[1,2,3],
-    'col2':['a','b','c']
-})
-print(df)
+# df=pd.DataFrame(
+#
+# )
+# print(df)
+# print('----')
+# print(df[0])
+
 # print(df[0])#error
